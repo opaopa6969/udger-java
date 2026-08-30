@@ -165,6 +165,13 @@ public class UdgerParser implements Closeable {
      */
     public UdgerIpResult parseIp(String ipString) throws SQLException, UnknownHostException {
 
+        if (ipString == null) {
+            throw new UnknownHostException("ip string must not be null");
+        }
+        if (!isIpLiteral(ipString)) {
+            throw new UnknownHostException("ip string must be an IPv4 or IPv6 literal: " + redact(ipString));
+        }
+
         UdgerIpResult ret = new UdgerIpResult(ipString);
 
         InetAddress addr = InetAddress.getByName(ipString);
@@ -483,6 +490,42 @@ public class UdgerParser implements Closeable {
             ret[i] = ((bytes [i*2] << 8 ) & 0xff00 )| (bytes[i*2+1] & 0xff);
         }
         return ret;
+    }
+
+    /**
+     * Checks that {@code s} looks like an IPv4 or IPv6 address literal and not a
+     * hostname. This is a syntactic gate used to prevent {@link InetAddress#getByName}
+     * from triggering DNS resolution of attacker-controlled hostnames through
+     * {@link #parseIp(String)}.
+     *
+     * <p>The check is intentionally conservative: any character that is not part
+     * of a numeric IP literal (digits, dots, colons, hex letters a-f/A-F, a
+     * leading bracket pair, or a percent sign for a scope id) causes the input
+     * to be rejected. Hostnames such as {@code localhost} or
+     * {@code evil.example.com} are therefore rejected before any network
+     * lookup is attempted.
+     */
+    private static boolean isIpLiteral(String s) {
+        if (s == null || s.isEmpty()) {
+            return false;
+        }
+        String t = s;
+        if (t.startsWith("[") && t.endsWith("]")) {
+            t = t.substring(1, t.length() - 1);
+        }
+        for (int i = 0; i < t.length(); i++) {
+            char c = t.charAt(i);
+            if (c >= '0' && c <= '9') continue;
+            if (c == '.' || c == ':') continue;
+            if (c == '%') continue;
+            if ((c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) continue;
+            return false;
+        }
+        return true;
+    }
+
+    private static String redact(String s) {
+        return s == null ? "null" : "<" + s.length() + " chars>";
     }
 
     private void prepare() throws SQLException {
