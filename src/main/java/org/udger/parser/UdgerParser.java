@@ -50,13 +50,13 @@ public class UdgerParser implements Closeable {
         Pattern pattern;
     }
 
-    private static WordDetector clientWordDetector;
-    private static WordDetector deviceWordDetector;
-    private static WordDetector osWordDetector;
+    private WordDetector clientWordDetector;
+    private WordDetector deviceWordDetector;
+    private WordDetector osWordDetector;
 
-    private static List<IdRegString> clientRegstringList;
-    private static List<IdRegString> osRegstringList;
-    private static List<IdRegString> deviceRegstringList;
+    private List<IdRegString> clientRegstringList;
+    private List<IdRegString> osRegstringList;
+    private List<IdRegString> deviceRegstringList;
 
     private Connection connection;
 
@@ -303,7 +303,7 @@ public class UdgerParser implements Closeable {
         this.deviceBrandParserEnabled = deviceBrandParserEnabled;
     }
 
-    private static synchronized void initStaticStructures(Connection connection) throws SQLException {
+    private synchronized void initStructures() throws SQLException {
         if (clientRegstringList == null) {
 
             clientRegstringList = prepareRegexpStruct(connection, "udger_client_regex");
@@ -488,7 +488,7 @@ public class UdgerParser implements Closeable {
     private void prepare() throws SQLException {
         connect();
         if (clientRegstringList == null) {
-            initStaticStructures(connection);
+            initStructures();
         }
     }
 
