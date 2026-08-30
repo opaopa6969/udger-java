@@ -441,7 +441,12 @@ public class UdgerParser implements Closeable {
     }
 
     private void fetchDeviceBrand(String uaString, UdgerUaResult ret) throws SQLException {
-        PreparedStatement preparedStatement = connection.prepareStatement(UdgerSqlQuery.SQL_DEVICE_REGEX);
+        PreparedStatement preparedStatement = preparedStmtMap.get(UdgerSqlQuery.SQL_DEVICE_REGEX);
+        if (preparedStatement == null) {
+            preparedStatement = connection.prepareStatement(UdgerSqlQuery.SQL_DEVICE_REGEX);
+            preparedStmtMap.put(UdgerSqlQuery.SQL_DEVICE_REGEX, preparedStatement);
+        }
+        preparedStatement.setMaxRows(0);
         preparedStatement.setObject(1, ret.getOsFamilyCode());
         preparedStatement.setObject(2, ret.getOsCode());
         ResultSet devRegexRs  = preparedStatement.executeQuery();
