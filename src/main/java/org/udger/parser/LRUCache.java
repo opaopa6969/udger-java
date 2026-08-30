@@ -38,8 +38,14 @@ public class LRUCache implements Serializable {
             while (map.size() > capacity) {
                 assert (tail != null);
                 map.remove(tail.uaString);
-                tail = tail.prev;
-                tail.next = null;
+                Node newTail = tail.prev;
+                tail.prev = null;
+                tail = newTail;
+                if (tail != null) {
+                    tail.next = null;
+                } else {
+                    head = null;
+                }
             }
         }
         this.capacity = capacity;
@@ -75,17 +81,22 @@ public class LRUCache implements Serializable {
             node.prev = null;
             if (head != null) {
                 head.prev = node;
-            }
-            if (tail == null) {
-                tail = head;
+            } else {
+                tail = node;
             }
             head = node;
             map.put(uaString, node);
             if (map.size() > capacity) {
                 assert(tail != null);
                 map.remove(tail.uaString);
-                tail = tail.prev;
-                tail.next = null;
+                Node newTail = tail.prev;
+                tail.prev = null;
+                tail = newTail;
+                if (tail != null) {
+                    tail.next = null;
+                } else {
+                    head = null;
+                }
             }
         }
         node.uaResult = uaResult;
